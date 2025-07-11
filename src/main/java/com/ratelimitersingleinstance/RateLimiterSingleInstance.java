@@ -31,14 +31,14 @@ public class RateLimiterSingleInstance {
         requestMap.computeIfAbsent(userId, k -> new LinkedList<>());
         Queue<Long> timestamps = requestMap.get(userId);
 
-        long windowStart = currentTime - timeWindow; // start of sliding window
+        long windowStart = currentTime - timeWindow; // start of a sliding window
 
         // remove old timestamps that are below new windowStart
         while (!timestamps.isEmpty() && timestamps.peek() <= windowStart) {
             timestamps.poll();
         }
 
-        // if there's less requests than rate limit, incoming request is valid
+        // if there's fewer requests than the rate limit, incoming request is valid
 
         if (timestamps.size() < rate) {
             timestamps.offer(currentTime);

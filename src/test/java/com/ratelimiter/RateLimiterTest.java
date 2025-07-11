@@ -66,6 +66,22 @@ public class RateLimiterTest {
     }
 
     @Test
+    void testTimeEdgeCases() {
+        RateLimiter longJumpLimiter = new RateLimiter(2, 10);
+        String user = "idleUser";
+
+        // Fill up the user's quota
+        longJumpLimiter.isAllowed(user, 100);
+        longJumpLimiter.isAllowed(user, 101);
+        assertFalse(longJumpLimiter.isAllowed(user, 102), "User should be blocked initially.");
+
+        // Simulate a long time passing
+        long farFutureTime = 1_000_000;
+        assertTrue(longJumpLimiter.isAllowed(user, farFutureTime),
+                "User should be allowed after a long time jump.");
+    }
+
+    @Test
     void testBurstAndRecovery() {
         final RateLimiter burstLimiter = new RateLimiter(10, 5);
         final String burstUser = "burstUser";
@@ -75,20 +91,17 @@ public class RateLimiterTest {
         // all 10 requests should be allowed
         for (int i = 0; i < 10; i++) {
             assertTrue(burstLimiter.isAllowed(
-                    burstUser, 1),
-                    "Request #" + (i + 1) + " in burst should be allowed.");
+                    burstUser, 1));
         }
 
         // 11th request shouldn't be allowed at that same time
         assertFalse(burstLimiter.isAllowed(
-                burstUser, 1),
-                "11th request at the same time should be rejected.");
+                burstUser, 1));
 
         // make a request at a later time. This should be allowed.
         // window = currentTime - timeWindow = 7 - 5 = 2. So this should be allowed
         assertTrue(burstLimiter.isAllowed(
-                burstUser, 7),
-                "A new request after the window slides should be allowed.");
+                burstUser, 7));
     }
 
 }
