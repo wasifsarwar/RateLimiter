@@ -12,7 +12,7 @@ public class RateLimiter {
 
     private final int rate;
     private final int timeWindow; // in seconds
-    private final LoadingCache<String, Queue<Long>> customerCaches;
+    private final LoadingCache<String, Queue<Long>> userCaches;
 
     public RateLimiter(int rate, int timeWindow) {
         if (rate <= 0 || timeWindow <= 0) {
@@ -28,36 +28,36 @@ public class RateLimiter {
          * ConcurrentLinkedQueue allows atomic operations, hence it is thread
          * interruption safe
          */
-        this.customerCaches = Caffeine.newBuilder()
+        this.userCaches = Caffeine.newBuilder()
                 .expireAfterAccess(10, TimeUnit.MINUTES)
                 .build(k -> new ConcurrentLinkedQueue<>());
     }
 
     /**
-     * Determines if a request should be allowed or rejected for a given customer.
+     * Determines if a request should be allowed or rejected for a given user.
      * This method is thread-safe and uses synchronized thread locking for high
      * performance.
      *
-     * @param customerId  The unique identifier for the customer. Must not be null.
+     * @param userId  The unique identifier for the user. Must not be null.
      * @param currentTime The current time of the request in seconds since the
      *                    epoch. Must be non-negative.
      * @return True if the request is allowed, false if it should be rejected.
-     * @throws IllegalArgumentException if customerId is null/empty or currentTime
+     * @throws IllegalArgumentException if userId is null/empty or currentTime
      *                                  is negative.
      */
-    public boolean isAllowed(String customerId, long currentTime) {
-        if (customerId == null || customerId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Customer ID cannot be null or empty.");
+    public boolean isAllowed(String userId, long currentTime) {
+        if (userId == null || userId.trim().isEmpty()) {
+            throw new IllegalArgumentException("User ID cannot be null or empty.");
         }
         if (currentTime < 0) {
             throw new IllegalArgumentException("Current time cannot be negative.");
         }
 
         // Get the thread-safe queue from the cache.
-        // The cache automatically creates a new queue for a new customer.
-        Queue<Long> timestamps = customerCaches.get(customerId);
+        // The cache automatically creates a new queue for a new user.
+        Queue<Long> timestamps = userCaches.get(userId);
 
-        // Synchronize on the specific customer's queue for fine-grained locking.
+        // Synchronize on the specific user's queue for fine-grained locking.
         synchronized (Objects.requireNonNull(timestamps)) {
             long windowStart = currentTime - timeWindow;
 

@@ -1,8 +1,10 @@
+import com.ratelimiter.RateLimiter;
+
 public class Main {
 
     public static void main(String[] args) {
         System.out.println("Rate Limiter Testing");
-        ratelimiter.RateLimiter rateLimiter = new ratelimiter.RateLimiter(5, 60);
+        RateLimiter rateLimiter = new RateLimiter(5, 60);
 
         // The First 5 requests should be allowed
         System.out.println("Request at 100s: " + rateLimiter.isAllowed("user123", 100)); // 1st

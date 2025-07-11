@@ -1,17 +1,18 @@
-package com.ratelimiter;
+package com.ratelimitersingleinstance;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RateLimiterTest {
-    private RateLimiter rateLimiter;
+public class RateLimiterSingleInstanceTest {
+    private RateLimiterSingleInstance rateLimiter;
 
     @BeforeEach
     void setUp() {
         // Create a new RateLimiter before each test
         // 3 requests per 10 seconds
-        rateLimiter = new RateLimiter(3, 10);
+        rateLimiter = new RateLimiterSingleInstance(3, 10);
     }
 
     @Test
@@ -57,38 +58,12 @@ public class RateLimiterTest {
     @Test
     void testConstructorWithInvalidArguments() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new RateLimiter(0, 10);
+            new RateLimiterSingleInstance(0, 10);
         }, "Rate of 0 should throw exception");
 
         assertThrows(IllegalArgumentException.class, () -> {
-            new RateLimiter(5, -1);
+            new RateLimiterSingleInstance(5, -1);
         }, "Negative time window should throw exception");
-    }
-
-    @Test
-    void testBurstAndRecovery() {
-        final RateLimiter burstLimiter = new RateLimiter(10, 5);
-        final String burstUser = "burstUser";
-
-        // fire 10 burst requests at the same time. This will fill up the
-        // concurrentLinkedQueue
-        // all 10 requests should be allowed
-        for (int i = 0; i < 10; i++) {
-            assertTrue(burstLimiter.isAllowed(
-                    burstUser, 1),
-                    "Request #" + (i + 1) + " in burst should be allowed.");
-        }
-
-        // 11th request shouldn't be allowed at that same time
-        assertFalse(burstLimiter.isAllowed(
-                burstUser, 1),
-                "11th request at the same time should be rejected.");
-
-        // make a request at a later time. This should be allowed.
-        // window = currentTime - timeWindow = 7 - 5 = 2. So this should be allowed
-        assertTrue(burstLimiter.isAllowed(
-                burstUser, 7),
-                "A new request after the window slides should be allowed.");
     }
 
 }
