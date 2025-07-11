@@ -1,4 +1,4 @@
-package ratelimiter;
+package com.ratelimiter;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
