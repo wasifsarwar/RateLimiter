@@ -20,6 +20,17 @@ public class RateLimiterSingleInstance {
         this.requestMap = new HashMap<>();
     }
 
+    /**
+     * Determines if a request should be allowed or rejected for a given user.
+     *
+     * @param userId      The unique identifier for the user. Must not be null.
+     * @param currentTime The current time of the request in seconds since the
+     *                    epoch. Must be non-negative.
+     * @return True if the request is allowed, false if it should be rejected.
+     * @throws IllegalArgumentException if userId is null/empty or currentTime
+     *                                  is negative.
+     */
+
     public boolean isAllowed(String userId, long currentTime) {
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID cannot be null or empty.");
