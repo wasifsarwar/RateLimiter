@@ -1,4 +1,4 @@
-package ratelimiter;
+package com.ratelimiter;
 
 public class RateLimiterTest {
     private RateLimiter rateLimiter;
