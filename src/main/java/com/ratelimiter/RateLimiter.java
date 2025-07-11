@@ -46,7 +46,7 @@ public class RateLimiter {
      *                                  is negative.
      */
     public boolean isAllowed(String userId, long currentTime) {
-        if (userId == null || userId.trim().isEmpty()) {
+        if (userId == null || userId.isEmpty()) {
             throw new IllegalArgumentException("User ID cannot be null or empty.");
         }
         if (currentTime < 0) {
@@ -58,6 +58,8 @@ public class RateLimiter {
         Queue<Long> timestamps = userCaches.get(userId);
 
         // Synchronize on the specific user's queue for single thread locking.
+        // Essential for ensuring that each user's state is
+        // modified atomically and safely in a multithreaded environment
         synchronized (Objects.requireNonNull(timestamps)) {
             long windowStart = currentTime - timeWindow;
 
