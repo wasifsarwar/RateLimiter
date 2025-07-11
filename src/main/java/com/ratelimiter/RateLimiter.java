@@ -1,7 +1,9 @@
-package com.java.ratelimiter;
+package ratelimiter;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -18,19 +20,28 @@ public class RateLimiter {
         }
         this.rate = rate;
         this.timeWindow = timeWindow;
+
+        /*
+         * Special Map that holds smart cache for each userId.
+         * Evicts entries automatically that aren't accessed for 10 minutes
+         *
+         * ConcurrentLinkedQueue allows atomic operations, hence it is thread
+         * interruption safe
+         */
         this.customerCaches = Caffeine.newBuilder()
-                .expireAfterAccess(10, TimeUnit.MINUTES) // Evict inactive customers
+                .expireAfterAccess(10, TimeUnit.MINUTES)
                 .build(k -> new ConcurrentLinkedQueue<>());
     }
 
     /**
      * Determines if a request should be allowed or rejected for a given customer.
-     * This method is thread-safe and uses fine-grained locking for high performance.
+     * This method is thread-safe and uses synchronized thread locking for high
+     * performance.
      *
      * @param customerId  The unique identifier for the customer. Must not be null.
      * @param currentTime The current time of the request in seconds since the
      *                    epoch. Must be non-negative.
-     * @return True if the request is allowed, false otherwise.
+     * @return True if the request is allowed, false if it should be rejected.
      * @throws IllegalArgumentException if customerId is null/empty or currentTime
      *                                  is negative.
      */
@@ -47,7 +58,7 @@ public class RateLimiter {
         Queue<Long> timestamps = customerCaches.get(customerId);
 
         // Synchronize on the specific customer's queue for fine-grained locking.
-        synchronized (timestamps) {
+        synchronized (Objects.requireNonNull(timestamps)) {
             long windowStart = currentTime - timeWindow;
 
             // Remove timestamps older than the current window.
