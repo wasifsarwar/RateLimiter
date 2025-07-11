@@ -28,7 +28,7 @@ public class RateLimiterSingleInstance {
             throw new IllegalArgumentException("Current time cannot be negative.");
         }
 
-        requestMap.computeIfAbsent(userId, k -> new LinkedList<>());
+        requestMap.computeIfAbsent(userId, k -> new LinkedList<>()); // add new Queue if it's a new user
         Queue<Long> timestamps = requestMap.get(userId);
 
         long windowStart = currentTime - timeWindow; // start of a sliding window

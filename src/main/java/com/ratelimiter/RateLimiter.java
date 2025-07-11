@@ -38,7 +38,7 @@ public class RateLimiter {
      * This method is thread-safe and uses synchronized thread locking for high
      * performance.
      *
-     * @param userId  The unique identifier for the user. Must not be null.
+     * @param userId      The unique identifier for the user. Must not be null.
      * @param currentTime The current time of the request in seconds since the
      *                    epoch. Must be non-negative.
      * @return True if the request is allowed, false if it should be rejected.
@@ -57,7 +57,7 @@ public class RateLimiter {
         // The cache automatically creates a new queue for a new user.
         Queue<Long> timestamps = userCaches.get(userId);
 
-        // Synchronize on the specific user's queue for fine-grained locking.
+        // Synchronize on the specific user's queue for single thread locking.
         synchronized (Objects.requireNonNull(timestamps)) {
             long windowStart = currentTime - timeWindow;
 
