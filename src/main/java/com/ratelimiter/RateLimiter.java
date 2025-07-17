@@ -5,6 +5,8 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import java.util.Objects;
 import java.util.Queue;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -13,13 +15,15 @@ public class RateLimiter {
     private final int rate;
     private final int timeWindow; // in seconds
     private final LoadingCache<String, Queue<Long>> userCaches;
-
-    public RateLimiter(int rate, int timeWindow) {
+    private final Map<String, Integer> ruleDict;
+    public RateLimiter(int rate, int timeWindow, Map<String, Integer> rules) {
         if (rate <= 0 || timeWindow <= 0) {
             throw new IllegalArgumentException("Rate and time window must be positive.");
         }
         this.rate = rate;
         this.timeWindow = timeWindow;
+
+        this.ruleDict = new ConcurrentHashMap<>(rules);
 
         /*
          * Special Map that holds smart cache for each userId.
@@ -45,6 +49,14 @@ public class RateLimiter {
      * @throws IllegalArgumentException if userId is null/empty or currentTime
      *                                  is negative.
      */
+
+    /*
+        queue = [1, 2, 5] for user1, rate 3
+        isAllowed(user1, 4)
+
+
+     */
+
     public boolean isAllowed(String userId, long currentTime) {
         if (userId == null || userId.isEmpty()) {
             throw new IllegalArgumentException("User ID cannot be null or empty.");
@@ -56,6 +68,8 @@ public class RateLimiter {
         // Get the thread-safe queue from the cache.
         // The cache automatically creates a new queue for a new user.
         Queue<Long> timestamps = userCaches.get(userId);
+        // grab the rule (rate)
+        int thisRate = ruleDict.getOrDefault(userId, rate);
 
         // Synchronize on the specific user's queue for single thread locking.
         // Essential for ensuring that each user's state is
@@ -69,7 +83,7 @@ public class RateLimiter {
             }
 
             // Check if the request is within the rate limit.
-            if (timestamps.size() < rate) {
+            if (timestamps.size() < thisRate) {
                 timestamps.offer(currentTime);
                 return true;
             }
